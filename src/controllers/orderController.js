@@ -8,6 +8,8 @@ const orderCreate = async function (req, res) {
     try{
         let userId = req.params.userId
         let data = req.body
+        
+        if(Object.keys(data).length == 0 ) return res.status(400).send({status:false, message: "please enter some data in the request body"})
 
     let objectcreate = {}
 

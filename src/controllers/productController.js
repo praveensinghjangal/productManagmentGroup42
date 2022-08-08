@@ -93,33 +93,78 @@ const createProduct = async function (req, res) {
 const getproduct = async function(req,res){
     try {
           
-          let querydata = req.query                              
+          let querydata = req.query  
+
+
+
+          
+         //if( Object.keys(querydata).length == 0) return res.status(400).send({status:false, message:"query can't be empty"})                            
          
          
 
-         let { name, size, priceGreaterThan,priceLessThan  } = querydata
+         let { name, size, priceGreaterThan,priceLessThan, ...rest} = querydata
+         if(!rest) return res.status(400).send({status:false, message:"no other attribute can be taken as i/p in query"})
+
          let obj = {isDeleted :false};
 
 
-          if (name) {
+
+          if ("name" in querydata) {
+            name = name.toString().trim()
+            
+            if (!Validator.isValidName(name)) {
+
+                return res.status(400).send({ status: false, message: "name must be a valid string" })
+            }
+            if(name.length < 2) return res.status(400).send({ status: false, message: "name must be at least 2 letters" })
             obj.title = { $regex : name}     
           }
-          if(size){
-            let newSize = size.split(",")
-            obj.availableSizes = {$in: newSize}
-          }
 
-          if(priceGreaterThan){
+
+          if ("size" in querydata) {
+
+            if (size.length != 0) {
+                let newSize = size.split(",")
+                for (i = 0; i < newSize.length; i++) {
+                    if (!["S", "XS", "M", "X", "L", "XXL", "XL"].includes(newSize[i].trim())) { return res.status(400).send({ status: false, msg: `please provide valid Size in between [ S , XS , M , X , L , XXL , XL ]` }) }
+                    else {
+                        obj.availableSizes = { $in: newSize }
+                    }
+                }
+            } else {
+
+                return res.status(400).send({ status: false, msg: "size cant be empty" })
+            }
+
+
+
+          if("priceGreaterThan" in querydata){
+
+            priceGreaterThan = priceGreaterThan.toString().trim()
+
+            if (!Validator.isvalidQuantity(priceGreaterThan)) {
+                return res.status(400).send({ status: false, message: "priceGreaterThan must have valid Numbers" })
+            }
             obj.price = {$gt: priceGreaterThan}
           }                                                                              
               
         
-           if(priceLessThan){
+           if("priceLessThan" in querydata){
+
+            priceLessThan = priceLessThan.toString().trim()
+
+            if (!Validator.isvalidQuantity(priceLessThan)) {
+                return res.status(400).send({ status: false, message: "priceLessThan must have valid Numbers" })
+            }
             obj.price = {$lt: priceLessThan}
           }
 
           
           if(priceGreaterThan &&  priceLessThan){
+
+            if (priceGreaterThan == priceLessThan ) {
+                return res.status(400).send({ status: false, message: "priceGreaterThan and priceLessThan can not be the equal " })
+            }
             obj.price =  { $gt: priceGreaterThan , $lt: priceLessThan }
 
           } 
@@ -133,6 +178,7 @@ const getproduct = async function(req,res){
       
           return res.status(200).send({ status: true, message: 'Success', data: productData })
         }
+    }
          
         catch (error) {
             return res.status(500).send({ status: false, message: error.message });

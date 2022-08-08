@@ -202,7 +202,7 @@ const updateuser = async function (req, res) {
         if (!mongoose.Types.ObjectId.isValid(userId)) return res.status(400).send({ status: false, msg: "provided userId is not valid" })
 
         var userDoc = await userModel.findOne({ _id: userId })
-        if (!userDoc) { return res.status(404).send({ status: false, msg: "no such product available" }) }
+        if (!userDoc) { return res.status(404).send({ status: false, msg: "no such user available" }) }
 
 
         else if (userDoc._id != req.dtoken) {
